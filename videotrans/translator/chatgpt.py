@@ -49,7 +49,7 @@ def create_openai_client():
     if not re.search('localhost',api_url) and  not re.match(r'^https?://(\d+\.){3}\d+(:\d+)?',api_url):
         update_proxy(type='set')
     try:
-        client = OpenAI(base_url=api_url,http_client=httpx.Client())
+        client = OpenAI(api_key=config.params.get('chatgpt_key'), base_url=api_url,http_client=httpx.Client())
     except Exception as e:
         raise Exception(f'API={api_url},{str(e)}')
     return client,api_url

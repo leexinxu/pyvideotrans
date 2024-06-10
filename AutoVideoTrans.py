@@ -36,7 +36,7 @@ def translate_to_chinese(text):
     # 使用ChatGpt翻译
     try:
         translated_text = run_trans(
-            translate_type='chatGPT1',
+            translate_type='chatGPT',
             text_list=text,
             target_language_name='zh-cn',
             set_p=True,

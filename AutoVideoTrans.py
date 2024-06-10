@@ -81,8 +81,8 @@ def rename(output, noextname, ext):
         print(f"File {file_path} does not exist")
         return "File does not exist"
     
-    # 翻译 noextname 为中文
-    translated_name = translate_to_chinese(noextname)
+    # 翻译 noextname 为中文(去掉.视频id)
+    translated_name = translate_to_chinese(noextname[:noextname.rfind('.')])
 
     # 新名称
     new_file_name = f"【中配】{translated_name}【{noextname}】.{ext}"

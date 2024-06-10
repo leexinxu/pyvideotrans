@@ -60,6 +60,8 @@ if __name__ == '__main__':
                 config.params[line[0]] = False
             elif line[1] == 'true':
                 config.params[line[0]] = True
+            elif line[0] in ['voice_role', 'ttsapi_voice_role']:  # 配音角色读成字符串
+                config.params[line[0]] = line[1]
             else:
                 config.params[line[0]] = int(line[1]) if re.match(r'^\d+$', line[1]) else line[1]
     if not config.params['source_language']:
@@ -160,6 +162,7 @@ if __name__ == '__main__':
 
     process_bar = tqdm(process_bar_data)
     try:
+        print(f'{config.params=}, {obj_format=}')
         video_task = TransCreate(config.params, obj_format)
         try:
             process_bar.set_description(process_bar_data[0])

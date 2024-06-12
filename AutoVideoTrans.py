@@ -109,9 +109,9 @@ config.params['chatgpt_model'] = 'qwen2'
 config.params['tts_type'] = 'ChatTTS'
 config.params['chattts_api'] = 'http://127.0.0.1:9966'
 config.params['voice_role'] = '2222'
-config.params['model_type'] = 'openai'
-config.params['whisper_model'] = 'large-v3'
-config.params['whisper_type'] = 'all'
+config.params['model_type'] = 'faster'
+config.params['whisper_model'] = 'distil-whisper-medium.en'
+config.params['whisper_type'] = 'split'
 config.params['voice_rate'] = '+0%'
 config.params['append_video'] = False
 config.params['voice_autorate'] = True
@@ -122,6 +122,7 @@ config.params['app_mode'] = 'cli'
 config.params['is_batch'] = False
 config.params['volume'] = '+0.5%'
 config.params['pitch'] = '+0%'
+config.params['is_separate'] = True
 
 # %%
 # 字幕标识和后缀

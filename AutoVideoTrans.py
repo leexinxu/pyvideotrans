@@ -36,7 +36,7 @@ def translate_to_chinese(text):
     # 使用ChatGpt翻译
     try:
         translated_text = run_trans(
-            translate_type='chatGPT1',
+            translate_type='chatGPT',
             text_list=text,
             target_language_name='zh-cn',
             set_p=True,
@@ -81,8 +81,8 @@ def rename(output, noextname, ext):
         print(f"File {file_path} does not exist")
         return "File does not exist"
     
-    # 翻译 noextname 为中文
-    translated_name = translate_to_chinese(noextname)
+    # 翻译 noextname 为中文(去掉.视频id)
+    translated_name = translate_to_chinese(noextname[:noextname.rfind('.')])
 
     # 新名称
     new_file_name = f"【中配】{translated_name}【{noextname}】.{ext}"
@@ -109,9 +109,9 @@ config.params['chatgpt_model'] = 'qwen2'
 config.params['tts_type'] = 'ChatTTS'
 config.params['chattts_api'] = 'http://127.0.0.1:9966'
 config.params['voice_role'] = '2222'
-config.params['model_type'] = 'openai'
-config.params['whisper_model'] = 'large-v3'
-config.params['whisper_type'] = 'all'
+config.params['model_type'] = 'faster'
+config.params['whisper_model'] = 'distil-whisper-medium.en'
+config.params['whisper_type'] = 'split'
 config.params['voice_rate'] = '+0%'
 config.params['append_video'] = False
 config.params['voice_autorate'] = True
@@ -122,6 +122,7 @@ config.params['app_mode'] = 'cli'
 config.params['is_batch'] = False
 config.params['volume'] = '+0.5%'
 config.params['pitch'] = '+0%'
+config.params['is_separate'] = True
 
 # %%
 # 字幕标识和后缀

@@ -463,8 +463,8 @@ def conver_to_8k(audio, target_audio):
 def backandvocal(backwav, peiyinm4a):
     backwav=Path(backwav).as_posix()
     peiyinm4a=Path(peiyinm4a).as_posix()
-    tmpwav = Path((os.environ["TEMP"] or os.environ['temp'])+ f'/{time.time()}-1.m4a').as_posix()
-    tmpm4a = Path((os.environ["TEMP"] or os.environ['temp'])+ f'/{time.time()}.m4a').as_posix()
+    tmpwav = Path(config.TEMP_DIR + f'/{time.time()}-1.m4a').as_posix()
+    tmpm4a = Path(config.TEMP_DIR + f'/{time.time()}.m4a').as_posix()
     # 背景转为m4a文件,音量降低为0.8
     wav2m4a(backwav, tmpm4a, ["-filter:a", f"volume={config.settings['backaudio_volume']}"])
     runffmpeg(['-y', '-i', peiyinm4a, '-i', tmpm4a, '-filter_complex',

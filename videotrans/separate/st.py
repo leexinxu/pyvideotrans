@@ -45,7 +45,7 @@ def uvr(*,model_name=None, save_root=None, inp_path=None,source="logs",btnkey=No
             traceback.print_exc()
         if need_reformat == 1:
             tmp_path = "%s/%s.reformatted.wav" % (
-                os.path.join(os.environ["TEMP"]),
+                config.TEMP_DIR,
                 f'{os.path.basename(inp_path)}-{time.time()}',
             )
             tools.runffmpeg([

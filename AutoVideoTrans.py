@@ -47,7 +47,7 @@ def translate_to_chinese(text):
         print(f"Error during translation chatGPT: {e}")
     
     if translated_text:
-        return translated_text;
+        return translated_text
 
     # 使用Google翻译
     try:
@@ -67,11 +67,9 @@ def translate_to_chinese(text):
         print(f"Error during translation Google: {e}")
     
     if translated_text:
-        return translated_text;
+        return translated_text
 
     return text
-    
-    
 
 # %%
 # 重命名为【中配】中文标题【原标题】.mp4
@@ -95,12 +93,70 @@ def rename(output, noextname, ext):
 
     print(f"File {file_path=} renamed to {new_file_path=}")
     return f"File renamed to {new_file_path}"
-    
 
+# %%
+def move_files(src_path, dst_dir):
+    try:
+        # 创建目标目录（如果不存在）
+        if not os.path.exists(dst_dir):
+            os.makedirs(dst_dir)
+        
+        # 移动主文件
+        shutil.move(src_path, os.path.join(dst_dir, os.path.basename(src_path)))
+        log(f"Moved: {src_path} to {dst_dir}")
+    except Exception as e:
+        log(f"Error moving file {src_path}: {e}")
+
+def move_related_files(src_dir, mp4_filename, dst_dir):
+    # 通过文件名模糊匹配移动相关文件
+    base_name = re.escape(os.path.splitext(mp4_filename)[0])
+    pattern = re.compile(rf"{base_name}.*")
+
+    for related_file in os.listdir(src_dir):
+        if pattern.match(related_file):
+            src_file_path = os.path.join(src_dir, related_file)
+            move_files(src_file_path, dst_dir)
+
+# %%
+def remove_special_characters_from_file_names(file_path):
+    # 创建一个正则表达式模式，匹配除了中文、英文、数字、下划线、连字符、句点之外的特殊字符和空格
+    pattern = re.compile(r'[^\u4e00-\u9fa5\w\d\-_.]')
+
+    # 获取文件的目录和文件名
+    directory, filename = os.path.split(file_path)
+
+    # 检查文件是否存在
+    if not os.path.isfile(file_path):
+        print(f"File not found: {file_path}")
+        return file_path
+
+    # 替换文件名中的特殊字符和空格为中划线
+    new_filename = pattern.sub('-', filename)
+
+    # 如果新文件名与旧文件名相同，则不重命名
+    if new_filename == filename:
+        print(f"No special characters to replace in: {file_path}")
+        return file_path
+
+    # 获取新文件的完整路径
+    new_file_path = os.path.join(directory, new_filename)
+
+    # 重命名文件
+    os.rename(file_path, new_file_path)
+    print(f"Renamed: {file_path} -> {new_file_path}")
+    return new_file_path
+
+# %%
+# 输出目录
+OUTPUT_DIR = '/Volumes/Data/VideoTranslation/TranslationCompleted'
+
+# 字幕标识和后缀
+SRT_EN = ".en.srt"
+SRT_CN = ".zh-Hans.srt"
 
 # %%
 # 静态参数
-config.params['target_dir'] = '/Volumes/Data/VideoTranslation/TranslationCompleted'
+config.params['target_dir'] = OUTPUT_DIR
 config.params['only_video'] = False
 config.params['translate_type'] = 'chatGPT'
 config.params['chatgpt_api'] = 'http://127.0.0.1:11434'
@@ -123,11 +179,6 @@ config.params['is_batch'] = False
 config.params['volume'] = '+0.5%'
 config.params['pitch'] = '+0%'
 config.params['is_separate'] = True
-
-# %%
-# 字幕标识和后缀
-SRT_EN = ".en.srt"
-SRT_CN = ".zh-Hans.srt"
 
 # %%
 # 翻译视频
@@ -172,7 +223,7 @@ def translatevideo(source_mp4_path):
         except Exception as e:
             err=f'{config.transobj["yuchulichucuo"]}:' + str(e)
             print(err)
-            sys.exit()
+            raise
         try:
             process_bar.set_description(process_bar_data[1])
             video_task.recogn()
@@ -180,7 +231,8 @@ def translatevideo(source_mp4_path):
         except Exception as e:
             err=f'{config.transobj["shibiechucuo"]}:' + str(e)
             print(err)
-            sys.exit()
+            raise
+            
         try:
             process_bar.set_description(process_bar_data[2])
             video_task.trans()
@@ -188,7 +240,7 @@ def translatevideo(source_mp4_path):
         except Exception as e:
             err=f'{config.transobj["fanyichucuo"]}:' + str(e)
             print(err)
-            sys.exit()
+            raise
         try:
             process_bar.set_description(process_bar_data[3])
             video_task.dubbing()
@@ -196,7 +248,7 @@ def translatevideo(source_mp4_path):
         except Exception as e:
             err=f'{config.transobj["peiyinchucuo"]}:' + str(e)
             print(err)
-            sys.exit()
+            raise
         try:
             process_bar.set_description(process_bar_data[4])
             video_task.hebing()
@@ -204,14 +256,14 @@ def translatevideo(source_mp4_path):
         except Exception as e:
             err=f'{config.transobj["hebingchucuo"]}:' + str(e)
             print(err)
-            sys.exit()
+            raise
         try:
             video_task.move_at_end()
             process_bar.update(1)
         except Exception as e:
             err=f'{config.transobj["hebingchucuo"]}:' + str(e)
             print(err)
-            sys.exit()
+            raise
 
         send_notification(config.transobj["zhixingwc"], f'"subtitles -> audio"')
         print(f'{"执行完成" if config.defaulelang == "zh" else "Succeed"} {video_task.targetdir_mp4}')
@@ -223,58 +275,7 @@ def translatevideo(source_mp4_path):
         send_notification(e, f'{video_task.obj["raw_basename"]}')
         # 捕获异常并重新绑定回溯信息
         traceback.print_exc()
-
-# %%
-def move_files(src_path, dst_dir):
-    try:
-        # 创建目标目录（如果不存在）
-        if not os.path.exists(dst_dir):
-            os.makedirs(dst_dir)
-        
-        # 移动主文件
-        shutil.move(src_path, os.path.join(dst_dir, os.path.basename(src_path)))
-        log(f"Moved: {src_path} to {dst_dir}")
-    except Exception as e:
-        log(f"Error moving file {src_path}: {e}")
-
-def move_related_files(src_dir, mp4_filename, dst_dir):
-    # 通过文件名模糊匹配查找相关字幕文件
-    base_name = re.escape(os.path.splitext(mp4_filename)[0])
-    pattern = re.compile(rf"{base_name}.*")
-
-    for related_file in os.listdir(src_dir):
-        if pattern.match(related_file):
-            src_file_path = os.path.join(src_dir, related_file)
-            move_files(src_file_path, dst_dir)
-
-# %%
-def remove_special_characters_from_file_names(file_path):
-    # 创建一个正则表达式模式，匹配除了中文、英文、数字、下划线、连字符、句点之外的特殊字符和空格
-    pattern = re.compile(r'[^\u4e00-\u9fa5\w\d\-_.]')
-
-    # 获取文件的目录和文件名
-    directory, filename = os.path.split(file_path)
-
-    # 检查文件是否存在
-    if not os.path.isfile(file_path):
-        print(f"File not found: {file_path}")
-        return file_path
-
-    # 替换文件名中的特殊字符和空格为中划线
-    new_filename = pattern.sub('-', filename)
-
-    # 如果新文件名与旧文件名相同，则不重命名
-    if new_filename == filename:
-        print(f"No special characters to replace in: {file_path}")
-        return file_path
-
-    # 获取新文件的完整路径
-    new_file_path = os.path.join(directory, new_filename)
-
-    # 重命名文件
-    os.rename(file_path, new_file_path)
-    print(f"Renamed: {file_path} -> {new_file_path}")
-    return new_file_path
+        raise
 
 # %%
 # 每分钟检查一下是否有新的视频，如果有，则翻译。翻译完移动到翻译完目录
@@ -309,9 +310,9 @@ def check_and_translate_videos(src_dir, dst_dir, error_dir):
             except Exception as e:
                 log(f"Error translating video {source_mp4_path}: {e}")
                 # 移动 .mp4 文件及其相应的字幕文件到翻译失败目录
-                move_files(source_mp4_path, error_dir)
                 move_related_files(src_dir, mp4_file, error_dir)
-            
+                # 删除输出目录
+                shutil.rmtree(f'{OUTPUT_DIR}/{os.path.splitext(mp4_file)[0]}')
 
         # 等待 60 秒再检查
         log("Waiting for 60 seconds before next check...")

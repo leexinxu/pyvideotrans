@@ -8,7 +8,7 @@ import numpy as np
 import soundfile as sf
 import torch
 # from tqdm import tqdm
-cpu = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+cpu = torch.device("mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu")
 
 
 class ConvTDFNetTrim:

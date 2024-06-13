@@ -22,7 +22,7 @@ def uvr(*,model_name=None, save_root=None, inp_path=None,source="logs",btnkey=No
         pre_fun = func(
             agg=10,
             model_path=os.path.join(config.rootdir, f"uvr5_weights/{model_name}.pth"),
-            device="cuda" if torch.cuda.is_available() else "cpu",
+            device="mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu",
             is_half=False,
             source=source
         )

@@ -185,6 +185,8 @@ config.params['is_separate'] = True
 def translatevideo(source_mp4_path):
     log(f"Translating video: {source_mp4_path}")
 
+    config.params['is_separate'] = True
+
     # 修改动态参数
     sub_path_en = os.path.splitext(source_mp4_path)[0] + SRT_EN
     sub_path_en = sub_path_en if os.path.exists(sub_path_en) else None

@@ -15,6 +15,10 @@ from datetime import datetime
 import re
 
 # %%
+# 设置环境变量 PYTORCH_MPS_HIGH_WATERMARK_RATIO 来调整 MPS 高水位线限制，或禁用它（这可能会导致系统不稳定）
+os.environ['PYTORCH_MPS_HIGH_WATERMARK_RATIO'] = '0.0'
+
+# %%
 def log(message):
     current_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     print(f"{current_time} - {message}")

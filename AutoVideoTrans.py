@@ -38,17 +38,30 @@ def get_subtitles(sub_path_zh, sub_path_en):
 def translate_to_chinese(text):
     translated_text = ''
     # 使用ChatGpt翻译
+    # try:
+    #     translated_text = run_trans(
+    #         translate_type='chatGPT',
+    #         text_list=text,
+    #         target_language_name='zh-cn',
+    #         set_p=True,
+    #         inst=None,
+    #         source_code='en')
+    #     print(f"Translation chatGPT: {translated_text=}")
+    # except Exception as e:
+    #     print(f"Error during translation chatGPT: {e}")
+
+    # 使用LocalLLM翻译
     try:
         translated_text = run_trans(
-            translate_type='chatGPT',
+            translate_type='LocalLLM',
             text_list=text,
             target_language_name='zh-cn',
             set_p=True,
             inst=None,
             source_code='en')
-        print(f"Translation chatGPT: {translated_text=}")
+        print(f"Translation LocalLLM: {translated_text=}")
     except Exception as e:
-        print(f"Error during translation chatGPT: {e}")
+        print(f"Error during translation LocalLLM: {e}")
     
     if translated_text:
         return translated_text
@@ -183,6 +196,12 @@ config.params['is_batch'] = False
 config.params['volume'] = '+0.5%'
 config.params['pitch'] = '+0%'
 config.params['is_separate'] = True
+config.params['fontsize'] = 12
+config.params['whisper_threads'] = 8
+config.params['translate_type'] = 'LocalLLM'
+config.params['localllm_api'] = 'http://127.0.0.1:11434/v1'
+config.params['localllm_key'] = 'ollama'
+config.params['localllm_model'] = 'qwen2'
 
 # %%
 # 翻译视频

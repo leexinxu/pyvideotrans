@@ -519,7 +519,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def model_type_change(self):
         if self.shibie_model_type.currentIndex() == 1:
             model_type = 'openai'
-            self.shibie_whisper_type.setDisabled(False)
+            self.shibie_whisper_type.setDisabled(True)
             self.shibie_model.setDisabled(False)
         elif self.shibie_model_type.currentIndex() == 2:
             model_type = 'GoogleSpeech'
@@ -527,6 +527,10 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             self.shibie_model.setDisabled(True)
         elif self.shibie_model_type.currentIndex() == 3:
             model_type = 'zh_recogn'
+            self.shibie_whisper_type.setDisabled(True)
+            self.shibie_model.setDisabled(True)
+        elif self.shibie_model_type.currentIndex() == 4:
+            model_type = 'doubao'
             self.shibie_whisper_type.setDisabled(True)
             self.shibie_model.setDisabled(True)
         else:
@@ -544,8 +548,13 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             model_type = 'GoogleSpeech'
         elif self.shibie_model_type.currentIndex() == 3:
             model_type = 'zh_recogn'
+        elif self.shibie_model_type.currentIndex() == 4:
+            model_type = 'doubao'
         else:
             model_type = "faster"
+            
+        langcode=translator.get_audio_code(show_source=self.shibie_language.currentText())
+        
         is_cuda = self.is_cuda.isChecked()
         if is_cuda and model_type == 'faster':
             allow = True
@@ -574,42 +583,22 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
         if not files or len(files) < 1:
             return QMessageBox.critical(self, config.transobj['anerror'], config.transobj['bixuyinshipin'])
+        
+        if model_type =='zh_recogn' and langcode[:2] not in ['zh']:
+            return QMessageBox.critical(self,config.transobj['anerror'],'zh_recogn 仅支持中文语音识别' if config.defaulelang=='zh' else 'zh_recogn Supports Chinese speech recognition only')
+        
+        if model_type =='doubao' and langcode[:2] not in ["zh","en","ja","ko","fr","es","ru"]:
+            return QMessageBox.critical(self,config.transobj['anerror'],'豆包语音识别仅支持中英日韩法俄西班牙语言，其他不支持')
+        
 
         wait_list = []
         self.shibie_startbtn.setText(config.transobj["running"])
         self.disabled_shibie(True)
         self.label_shibie10.setText('')
         for file in files:
-            basename = os.path.basename(file)
-            '''
-            try:
-                rs, newfile, base = tools.rename_move(file, is_dir=False)
-                if rs:
-                    file = newfile
-                    basename = base
-            except Exception as e:
-                print(f"removename {str(e)}")
-            '''
+            basename = os.path.basename(file)           
             self.shibie_text.clear()
-
-            if os.path.splitext(basename)[-1].lower() in [".mp4", ".avi", ".mov", ".mp3", ".flac", ".m4a", ".mov",
-                                                          ".aac"]:
-                out_file = f"{config.TEMP_HOME}/{basename}.wav"
-                if not os.path.exists(f"{config.TEMP_HOME}"):
-                    os.makedirs(f"{config.TEMP_HOME}")
-                try:
-                    self.shibie_ffmpeg_task = Worker([
-                        ['-y', '-i', file, '-vn', '-ac', '1', '-ar', '8000', out_file]
-                    ], "logs", self)
-                    self.shibie_ffmpeg_task.start()
-                    wait_list.append(out_file)
-                except Exception as e:
-                    config.logger.error("执行语音识别前，先从视频中分离出音频失败：" + str(e))
-                    self.shibie_startbtn.setText("执行")
-                    self.disabled_shibie(False)
-                    QMessageBox.critical(self, config.transobj['anerror'], str(e))
-            else:
-                wait_list.append(file)
+            wait_list.append(file)
 
         self.shibie_out_path = config.homedir + f"/recogn"
 
@@ -619,9 +608,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.shibie_task = WorkerWhisper(
             audio_paths=wait_list,
             model=model,
-            split_type=["all", "split", "avg"][split_type_index],
+            split_type=["all","avg"][split_type_index],
             model_type=model_type,
-            language=translator.get_audio_code(show_source=self.shibie_language.currentText()),
+            language=langcode,
             func_name="shibie",
             out_path=self.shibie_out_path,
             is_cuda=is_cuda,
@@ -707,6 +696,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         txt = self.hecheng_plaintext.toPlainText().strip()
         language = self.hecheng_language.currentText()
         role = self.hecheng_role.currentText()
+        print(f'{role=}')
         rate = int(self.hecheng_rate.value())
         tts_type = self.tts_type.currentText()
         langcode = translator.get_code(show_text=language)
@@ -775,7 +765,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
                                       tts_type=self.tts_type.currentText(),
                                       func_name="hecheng",
                                       voice_autorate=issrt and self.voice_autorate.isChecked(),
-                                      audio_ajust=issrt and self.audio_ajust.isChecked(),
                                       tts_issrt=issrt)
         self.hecheng_task.start()
         self.hecheng_startbtn.setText(config.transobj["running"])
@@ -786,10 +775,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def tts_issrt_change(self, state):
         if state:
             self.voice_autorate.setDisabled(False)
-            self.audio_ajust.setDisabled(False)
         else:
             self.voice_autorate.setDisabled(True)
-            self.audio_ajust.setDisabled(True)
 
     # tts类型改变
     def tts_type_change(self, type):
@@ -934,6 +921,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         config.params["deeplx_address"] = self.settings.value("deeplx_address", "")
         config.params["chatgpt_api"] = self.settings.value("chatgpt_api", "")
         config.params["chatgpt_key"] = self.settings.value("chatgpt_key", "")
+        config.params["localllm_api"] = self.settings.value("localllm_api", "")
+        config.params["localllm_key"] = self.settings.value("localllm_key", "")
+        config.params["zijiehuoshan_key"] = self.settings.value("zijiehuoshan_key", "")
         config.params["tencent_SecretId"] = self.settings.value("tencent_SecretId", "")
         config.params["tencent_SecretKey"] = self.settings.value("tencent_SecretKey", "")
         config.params["gemini_key"] = self.settings.value("gemini_key", "")

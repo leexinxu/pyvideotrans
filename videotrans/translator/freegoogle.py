@@ -12,8 +12,8 @@ from videotrans.util import tools
 import random
 
 urls=[
-"https://g0.pyvideotrans.com",
-"https://g1.pyvideotrans.com"
+"https://g3.pyvideotrans.com",
+"https://g4.pyvideotrans.com"
 ]
 
 shound_del=False
@@ -33,6 +33,8 @@ def update_proxy(type='set'):
                 os.environ['http_proxy'] = proxy
                 os.environ['https_proxy'] = proxy
                 os.environ['all_proxy'] = proxy
+                return proxy
+    return None
 
 
 def trans(text_list, target_language="en", *, set_p=True,inst=None,stop=0,source_code=""):
@@ -44,7 +46,10 @@ def trans(text_list, target_language="en", *, set_p=True,inst=None,stop=0,source
     set_p:
         是否实时输出日志，主界面中需要
     """
-    update_proxy(type='set')
+    proxies=None
+    pro=update_proxy(type='set')
+    if pro:
+        proxies={"https":pro,"http":pro}
     # 翻译后的文本
     target_text = []
 
@@ -52,6 +57,26 @@ def trans(text_list, target_language="en", *, set_p=True,inst=None,stop=0,source
     iter_num = 0  # 当前循环次数，如果 大于 config.settings.retries 出错
     err = ""
     google_url=random.choice(urls)
+    def get_content(data):
+        url = f"{google_url}/translate_a/single?client=gtx&dt=t&sl=auto&tl={data['target_language']}&q={quote(data['text'])}"
+        config.logger.info(f'[Google]请求数据:{url=}')
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        response = requests.get(url, headers=headers, timeout=300, proxies=proxies)
+        config.logger.info(f'[Google]返回数据:{response.text=}')
+        if response.status_code != 200:
+            config.logger.error(f'{response.text=}')
+            err = f'{response.status_code=},{response.reason=}'
+            raise Exception(err)
+
+        re_result = response.json()
+        if len(re_result[0]) < 1:
+            err = f'无有效结果,{response.text}'
+            raise Exception(err)
+        return ("".join([te[0] for te in re_result[0]])).strip()
+
+
     while 1:
         if config.exit_soft or (config.current_status!='ing' and config.box_trans!='ing'):
             return
@@ -87,35 +112,27 @@ def trans(text_list, target_language="en", *, set_p=True,inst=None,stop=0,source
                 time.sleep(stop)
             try:
                 source_length=len(it)
-                text = "##".join(it)
-                print(f'{text=}')
-                url = f"{google_url}/m?sl=auto&tl={quote(target_language)}&hl={quote(target_language)}&q={quote(text)}"
-                headers = {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                }
-                config.logger.info(f'[FreeGoole] 发送请求:{url=}')
-                response = requests.get(url,  headers=headers, timeout=300)
-                config.logger.info(f'[FreeGoole] 返回:{response.text=}')
-                if response.status_code != 200:
-                    config.logger.error(f'{response.text=}')
-                    err=f'{google_url} error_code={response.status_code}'
-                    break
+                text = "\n".join(it)
+                result=get_content({"text":text,"target_language":target_language})
+                result = [te.strip() for te in result.split("\n")]
+                result_length = len(result)
 
-                re_result = re.findall(
-                    r'(?s)class="(?:t0|result-container)">(.*?)<', response.text)
-                if len(re_result) < 1 or not re_result[0]:
-                    err=f'{google_url} {re_result}'
-                    break
-                result=re_result[0].strip().replace('&#39;','"').replace('&quot;',"'").split("##")
+                # 如果返回数量和原始语言数量不一致，则重新切割
+                if result_length<source_length:
+                    print(f'翻译前后数量不一致，需要重新按行翻译')
+                    result = []
+                    for line_res in it:
+                        result.append(get_content({"text": line_res, "target_language": target_language}))
+
                 if inst and inst.precent < 75:
                     inst.precent += round((i + 1) * 5 / len(split_source_text), 2)
                 if set_p:
                     tools.set_process( f'{result[0]}\n\n' if split_size==1 else "\n\n".join(result), 'subtitle')
                     tools.set_process(config.transobj['starttrans']+f' {i*split_size+1} ',btnkey=inst.init['btnkey'] if inst else "")
                 else:
-                    tools.set_process("\n\n".join(result), func_name="set_fanyi")
-                result_length=len(result)
+                    tools.set_process_box("\n".join(result), func_name="fanyi",type="set")
                 config.logger.info(f'{result_length=},{source_length=}')
+                result_length = len(result)
                 while result_length<source_length:
                     result.append("")
                     result_length+=1

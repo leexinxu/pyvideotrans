@@ -1,62 +1,42 @@
 # -*- coding: utf-8 -*-
-import os
 import re
 import time
-import httpx
-from openai import AzureOpenAI, APIError
+import requests
+from requests import JSONDecodeError
 from videotrans.configure import config
 from videotrans.util import tools
 
 
-shound_del=False
-def update_proxy(type='set'):
-    global shound_del
-    if type=='del' and shound_del:
-        del os.environ['http_proxy']
-        del os.environ['https_proxy']
-        del os.environ['all_proxy']
-        shound_del=False
-    elif type=='set':
-        raw_proxy=os.environ.get('http_proxy')
-        if not raw_proxy:
-            proxy=tools.set_proxy()
-            if proxy:
-                shound_del=True
-                os.environ['http_proxy'] = proxy
-                os.environ['https_proxy'] = proxy
-                os.environ['all_proxy'] = proxy
 
-def get_content(d,*,model=None,prompt=None,assiant=None):
-
+def get_content(d,*,prompt=None,assiant=None):
     message = [
         {'role': 'system', 'content': prompt},
         {'role': 'assistant', 'content': assiant},
-        {'role': 'user', 'content': "\n".join([i.strip() for i in d]) if isinstance(d, list) else d},
+        {'role': 'user', 'content':  "\n".join([i.strip() for i in d]) if isinstance(d,list) else d},
     ]
+    config.logger.info(f"\n[字节火山引擎]发送请求数据:{message=}\n接入点名称:{config.params['zijiehuoshan_model']}")
 
-    config.logger.info(f"\n[AzureGPT]请求数据:{message=}")
     try:
-        response = model.chat.completions.create(
-            model=config.params["azure_model"],
-            messages=message
-        )
-        config.logger.info(f'[AzureGPT]返回响应:{response=}')
-    except APIError as e:
-        config.logger.error(f'[AzureGPT]请求失败:{str(e)}')
-        raise
-    except Exception as e:
-        config.logger.error(f'[AzureGPT]请求失败:{str(e)}')
-        raise
-
-    if response.choices:
-        result = response.choices[0].message.content.strip()
-    elif response.data and response.data['choices']:
-        result = response.data['choices'][0]['message']['content'].strip()
+        req={
+            "model":config.params['zijiehuoshan_model'],
+            "messages":message
+        }
+        resp=requests.post("https://ark.cn-beijing.volces.com/api/v3/chat/completions",proxies={"https":"","http":""},json=req,headers={
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {config.params['zijiehuoshan_key']}"
+        })
+        config.logger.info(f'[字节火山引擎]响应:{resp.text=}')
+        data=resp.json()
+        if 'choices' not in data or len(data['choices'])<1:
+            raise Exception(f'字节火山翻译失败:{resp.text}')
+        result = data['choices'][0]['message']['content'].strip()
+    except JSONDecodeError as e:
+        raise Exception('字节火山翻译失败，返回数据不是有效json格式')
     else:
-        config.logger.error(f'[AzureGPT]请求失败:{response=}')
-        raise Exception(f"{response}")
-    result = result.replace('##', '').strip().replace('&#39;', '"').replace('&quot;', "'")
-    return re.sub(r'\n{2,}',"\n",result)
+        return re.sub(r'\n{2,}',"\n",result)
+
+
 
 def trans(text_list, target_language="English", *, set_p=True,inst=None,stop=0,source_code="",is_test=False):
     """
@@ -67,20 +47,21 @@ def trans(text_list, target_language="English", *, set_p=True,inst=None,stop=0,s
     set_p:
         是否实时输出日志，主界面中需要
     """
-    update_proxy(type='set')
 
     # 翻译后的文本
-    target_text = {"0":[]}
+    target_text = {"0":[],"srts":[]}
     index = 0  # 当前循环需要开始的 i 数字,小于index的则跳过
     iter_num = 0  # 当前循环次数，如果 大于 config.settings.retries 出错
     err = ""
-    is_srt=False if isinstance(text_list, str) else True
+    is_srt=False if  isinstance(text_list, str) else True
+
     # 切割为每次翻译多少行，值在 set.ini中设定，默认10
     split_size = int(config.settings['trans_thread'])
-
-    prompt = config.params['azure_template'].replace('{lang}', target_language)
-    with open(config.rootdir+"/videotrans/azure.txt",'r',encoding="utf-8") as f:
+    #if is_srt and split_size>1:
+    prompt=config.params['zijiehuoshan_template'].replace('{lang}', target_language)
+    with open(config.rootdir+"/videotrans/zijie.txt",'r',encoding="utf-8") as f:
         prompt=f.read().replace('{lang}', target_language)
+
     assiant=f"Sure, please provide the text you need translated into {target_language}"
 
 
@@ -93,6 +74,7 @@ def trans(text_list, target_language="English", *, set_p=True,inst=None,stop=0,s
         for i,it in enumerate(text_list):
             source_text.append(it['text'].strip().replace('\n','.'))
     split_source_text = [source_text[i:i + split_size] for i in range(0, len(source_text), split_size)]
+
     while 1:
         if config.exit_soft or (config.current_status!='ing' and config.box_trans!='ing' and not is_test):
             return
@@ -106,29 +88,21 @@ def trans(text_list, target_language="English", *, set_p=True,inst=None,stop=0,s
                     f"第{iter_num}次出错重试" if config.defaulelang == 'zh' else f'{iter_num} retries after error',btnkey=inst.init['btnkey'] if inst else "")
             time.sleep(10)
 
-        client = AzureOpenAI(
-            api_key=config.params["azure_key"],
-            api_version="2023-05-15",
-            azure_endpoint=config.params["azure_api"],
-            http_client=httpx.Client()
-        )
-
-
         for i,it in enumerate(split_source_text):
-            if config.exit_soft or (config.current_status != 'ing' and config.box_trans != 'ing' and not is_test):
+            if config.exit_soft or  (config.current_status != 'ing' and config.box_trans != 'ing' and not is_test):
                 return
-            if i<index:
+            if i < index:
                 continue
             if stop>0:
                 time.sleep(stop)
             try:
-                result=get_content(it,model=client,prompt=prompt,assiant=assiant)
+                result=get_content(it,prompt=prompt,assiant=assiant)
                 if inst and inst.precent < 75:
                     inst.precent += 0.01
                 if not is_srt:
                     target_text["0"].append(result)
                     if not set_p:
-                        tools.set_process_box(text=result + "\n", func_name="fanyi",type="set")
+                        tools.set_process_box(text=result + "\n",func_name="fanyi",type="set")
                     continue
 
                 sep_res = tools.cleartext(result).split("\n")
@@ -137,10 +111,10 @@ def trans(text_list, target_language="English", *, set_p=True,inst=None,stop=0,s
                 # 如果返回数量和原始语言数量不一致，则重新切割
                 if sep_len < raw_len:
                     config.logger.error(f'翻译前后数量不一致，需要重新按行翻译')
-                    sep_res = []
-                    for it_n in it:
-                        t = get_content(it_n.strip(),model=client,prompt=prompt,assiant=assiant)
-                        sep_res.append(t)
+                    sep_res=[]
+                    for line_res in it:
+                        sep_res.append(get_content(line_res.strip(),prompt=prompt,assiant=assiant))
+
 
                 for x,result_item in enumerate(sep_res):
                     if x < len(it):
@@ -155,7 +129,7 @@ def trans(text_list, target_language="English", *, set_p=True,inst=None,stop=0,s
                     target_text["srts"]+=tmp
 
             except Exception as e:
-                err = str(e)
+                err=str(e)
                 break
             else:
                 # 未出错
@@ -166,21 +140,20 @@ def trans(text_list, target_language="English", *, set_p=True,inst=None,stop=0,s
             break
 
 
-    update_proxy(type='del')
 
     if err:
-        config.logger.error(f'[AzureGPT]翻译请求失败:{err=}')
-        raise Exception(f'AzureGPT:{err}')
+        config.logger.error(f'[字节火山引擎]翻译请求失败:{err=}')
+        raise Exception(f'字节火山引擎:{err}')
 
     if not is_srt:
         return "\n".join(target_text["0"])
-    if len(target_text['srts']) < len(text_list) / 2:
-        raise Exception(f'AzureGPT:{config.transobj["fanyicuowu2"]}')
+
+    if len(target_text['srts']) < len(text_list)/2:
+        raise Exception(f'字节火山引擎:{config.transobj["fanyicuowu2"]}')
 
     for i, it in enumerate(text_list):
-        line=str(it["line"])
-        if line in target_text:
-            text_list[i]['text'] = target_text[line]
+        if i< len(target_text['srts']):
+            text_list[i]['text'] = target_text['srts'][i]
         else:
             text_list[i]['text']=""
     return text_list

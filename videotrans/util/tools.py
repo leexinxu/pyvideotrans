@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import copy
 import hashlib
+import math
 import platform
 import random
 
@@ -189,9 +190,9 @@ def runffmpeg(arg, *, noextname=None,
     arg_copy = copy.deepcopy(arg)
 
     if fps:
-        cmd = ["ffmpeg", "-hide_banner", "-ignore_unknown", "-vsync", '1', '-r', f'{fps}']
+        cmd = ["ffmpeg", "-hide_banner", "-ignore_unknown"]
     else:
-        cmd = ["ffmpeg", "-hide_banner", "-ignore_unknown", "-vsync", f"{config.settings['vsync']}"]
+        cmd = ["ffmpeg", "-hide_banner", "-ignore_unknown"]
     # 启用了CUDA 并且没有禁用GPU
     # 默认视频编码 libx264 / libx265
     default_codec=f"libx{config.settings['video_codec']}"
@@ -208,9 +209,22 @@ def runffmpeg(arg, *, noextname=None,
         for i, it in enumerate(arg):
             if i > 0 and arg[i - 1] == '-c:v':
                 arg[i] = config.video_codec
+            elif it=='-crf' and '_nvenc' in config.video_codec and config.settings['cuda_qp']:
+                arg[i]='-qp'
+    
+    if fps:
+        arg.insert(-1,'-r')
+        arg.insert(-1,f'{fps}')
+    # else:
+    #     arg.insert(-1,'-fps_mode')
+    #     arg.insert(-1,f"{config.settings['vsync']}")
 
     cmd = cmd + arg
-    print(f'ffmpeg:{cmd=}')
+    # 插入自定义 ffmpeg 参数
+    if config.settings['ffmpeg_cmd']:
+        for it in config.settings['ffmpeg_cmd'].split(' '):
+            cmd.insert(-1,str(it))
+    # print(f'ffmpeg:{" ".join(cmd)}')
     config.logger.info(f'runffmpeg-tihuan:{cmd=}')
     if noextname:
         config.queue_novice[noextname] = 'ing'
@@ -263,7 +277,7 @@ def runffmpeg(arg, *, noextname=None,
 # run ffprobe 获取视频元信息
 def runffprobe(cmd):
     # cmd[-1] = os.path.normpath(cmd[-1])
-    print(f'ffprobe:{cmd=}')
+    # print(f'ffprobe:{cmd=}')
     try:
         p = subprocess.run( cmd if isinstance(cmd,str) else ['ffprobe'] + cmd,
                            stdout=subprocess.PIPE,
@@ -372,7 +386,7 @@ def conver_mp4(source_file, out_mp4, *, is_box=False):
         "-c:a",
         "aac",
         '-crf', f'{config.settings["crf"]}',
-        '-preset', 'slow',
+        '-preset', config.settings['preset'],
         out_mp4
     ], is_box=is_box)
 
@@ -402,6 +416,8 @@ def split_audio_byraw(source_mp4, targe_audio, is_separate=False,btnkey=None):
         "-i",
         source_mp4,
         "-vn",
+        "-ac",
+        "1",
         "-c:a",
         "aac",
         targe_audio
@@ -454,7 +470,7 @@ def conver_to_8k(audio, target_audio):
         "-ac",
         "1",
         "-ar",
-        "8000",
+        "16000",
         Path(target_audio).as_posix(),
     ])
 
@@ -510,7 +526,7 @@ def m4a2wav(m4afile, wavfile):
         "-ac",
         "1",
         "-ar",
-        "8000",
+        "16000",
         "-b:a",
         "128k",
         "-c:a",
@@ -539,11 +555,12 @@ def concat_multi_mp4(*, filelist=[], out=None, maxsec=None, fps=None):
     if out:
         out=Path(out).as_posix()
     if maxsec:
-        return runffmpeg(['-y', '-f', 'concat', '-safe', '0', '-i', txt, '-c:v', f"libx{video_codec}", '-t', f"{maxsec}", '-crf',
-                          f'{config.settings["crf"]}', '-preset', 'slow', '-an', out], fps=fps)
+        print(f'maxsec={maxsec=}')
+        return os.system(f'ffmpeg -y -f  concat -safe 0 -i "{txt}"  -c:v libx{video_codec}  -crf {config.settings["crf"]} -preset {config.settings["preset"]} -an {out}')
+        # return runffmpeg(['-y', '-f', 'concat', '-safe', '0', '-i', txt, '-c:v', f"libx{video_codec}", '-crf',  f'{config.settings["crf"]}', '-preset', config.settings['preset'], '-an', out], fps=fps)
     return runffmpeg(
         ['-y', '-f', 'concat', '-safe', '0', '-i', txt, '-c:v', f"libx{video_codec}", '-an', '-crf', f'{config.settings["crf"]}',
-         '-preset', 'slow', out], fps=fps)
+         '-preset', config.settings['preset'], out], fps=fps)
 
 
 # 多个音频片段连接 
@@ -579,6 +596,7 @@ def precise_speed_up_audio(*, file_path=None, out=None, target_duration_ms=None,
     # speedup_ratio = current_duration_ms / target_duration_ms
     # 计算速度变化率
     speedup_ratio = current_duration_ms / target_duration_ms
+
     if target_duration_ms <= 0 or speedup_ratio <= 1:
         return True
     rate = min(max_rate, speedup_ratio)
@@ -759,6 +777,7 @@ def get_subtitle_from_srt(srtfile, *, is_file=True):
 
 
 # 将 时:分:秒,|.毫秒格式为  aa:bb:cc,|.ddd形式
+# 对不规范字幕格式，eg  001:01:2,4500  01:54,14 等做处理
 def format_time(s_time="", separate=','):
     if not s_time.strip():
         return f'00:00:00{separate}000'
@@ -865,7 +884,7 @@ def cut_from_video(*, ss="", to="", source="", pts="", out="", fps=None):
                   f"libx{video_codec}",
                   '-an',
                   '-crf', f'{config.settings["crf"]}',
-                  '-preset', 'slow',
+                  '-preset', config.settings['preset'],
                   f'{out}'
                   ]
     return runffmpeg(cmd, fps=fps)
@@ -882,7 +901,7 @@ def cut_from_audio(*, ss, to, audio_file, out_file):
         "-to",
         format_time(to, '.'),
         "-ar",
-        "8000",
+        "16000",
         out_file
     ]
     return runffmpeg(cmd)
@@ -1156,8 +1175,10 @@ def format_video(name, out=None):
     ext = raw_pathlib.suffix
     raw_dirname = raw_pathlib.parent.resolve().as_posix()
 
+
     output_path=Path(f'{out}/{raw_noextname}' if out else f'{raw_dirname}/_video_out/{raw_noextname}')
     output_path.mkdir(parents=True, exist_ok=True)
+    print(f'{output_path=}')
     obj = {
         "raw_name": name,
         # 原始视频所在原始目录
@@ -1195,14 +1216,14 @@ def format_video(name, out=None):
         obj['noextname'] = obj['raw_noextname']
     else:
         # 不符合，需要移动到 tmp 下
+        obj['basename'] = f'{obj["unid"]}.{obj["raw_ext"]}'
         obj['noextname'] = obj['unid']
-        obj['basename'] = f'{obj["noextname"]}.{obj["raw_ext"]}'
-        obj['dirname'] = config.TEMP_DIR + f"/{obj['noextname']}"
-        obj['dirname'] = config.TEMP_DIR + f"/{obj['noextname']}"
+        obj['dirname'] = config.TEMP_DIR + f"/{obj['unid']}"
         obj['source_mp4'] = f'{obj["dirname"]}/{obj["basename"]}'
-        # 目标存放位置，完成后再复制
-        obj['linshi_output'] = config.TEMP_DIR + f'/{obj["noextname"]}/_video_out'
+        # 目标存放位置，完成后再复制到 output
+        obj['linshi_output'] = f'{obj["dirname"]}/_video_out'
         Path(obj['linshi_output']).mkdir(parents=True, exist_ok=True)
+
     return obj
 
 
@@ -1313,3 +1334,137 @@ def set_ass_font(srtfile=None):
     with open(assfile,'w',encoding='utf-8') as f:
         f.write("".join(ass_str))
     return os.path.basename(assfile)
+
+# 根据原始语言list中每个项字数，所占所字数比例，将翻译结果list target_list 按照同样比例切割
+# urgent是中日韩泰语言，按字符切割，否则按标点符号切割
+def format_result(source_list,target_list,target_lang="zh"):
+    source_len=[]
+    source_total=0
+    target_lang=target_lang.lower()
+    for it in source_list:
+        it_len=len(it.strip())
+        source_total+=it_len
+        source_len.append(it_len)
+
+
+    target_str="".join(target_list).strip()
+    target_total=len(target_str)
+    target_len=[]
+    for num in source_len:
+        n=math.floor(target_total*num/source_total)
+        n=1 if n==0 else n
+        target_len.append(n)
+
+
+    # 开始截取文字
+    result=[]
+    start=0
+    #如果其他语言，需要找到最近的标点或空格
+    flag=[
+          ".",
+          '"',
+          "'",
+          ",",
+          "!",
+          "?",
+          "_",
+          "~",
+          "[",
+          "]",
+          "{",
+          "}",
+          "<",
+          ">",
+          ";",
+          ":",
+          "|",
+          "(",
+          ")",
+          "，",
+          "。",
+          "；",
+          "：",
+          "‘",
+          "“",
+          "？",
+          "、",
+          "《",
+          "》",
+          "【",
+          "】",
+          "｛",
+          "｝",
+          "（",
+          "）",
+          "—",
+          "·",
+          "！",
+          "￥",
+          "…"
+    ]
+    if target_lang[:2] in ['zh','ja','ko']:
+        flag.append(" ")
+
+    for num in target_len:
+        lastpos=start+num
+        if start>=target_total:
+            result.append("")
+            continue
+        text=target_str[start:lastpos]
+
+        if len(text)<3 or text[-1] in flag:
+            start=start+num
+            result.append(text.strip())
+            continue
+        offset = -3
+        maxlen = 3 if target_lang[:2] in ['zh','ja','ko']  else 5
+        # 倒退3个到前进6个寻找标点 切割点
+        while offset<maxlen:
+            newlastpos=lastpos+offset
+            if start>=target_total:
+                break
+            # 如果达到了末尾或者找到了标点则切割
+            if newlastpos>=target_total:
+                result.append(target_str[start:])
+                break
+            st_r=target_str[newlastpos]
+            print(f'有无空格 {st_r=},offset={offset}')
+            if (not st_r.strip() and target_lang[:2] not in ['zh','ja','ko']) or newlastpos>=target_total or st_r in flag:
+                print(f'{offset=},{st_r=}')
+                text=target_str[start:newlastpos+1] if start<target_total else ""
+                start=newlastpos+1
+                result.append(text.strip())
+                break
+            offset+=1
+        # 已找到切割点
+        if offset<maxlen:
+            continue
+
+        print(f'强制切割{target_lang=},{st_r=}')
+        # 没找到分割标点，强制截断
+        text=target_str[start:start+num] if start<target_total else ""
+        start=start+num
+        result.append(text.strip())
+    if len(result)<len(source_list):
+        for i in range(len(source_list)-len(result)):
+            result.append("")
+
+    length=len(result)
+    for i,it in enumerate(result):
+        if i>0 and it=="":
+            tmp=re.split(r'[\s,.? 。，！；、·：… ]',result[i-1])
+            if len(tmp)>1 and tmp[-1]:
+                it=tmp[-1]
+                result[i-1]=" ".join(tmp[:-1])
+            elif len(tmp)>2 and tmp[-2]:
+                it=tmp[-2]
+                result[i-1]=" ".join(tmp[:-2])
+            result[i]=it
+
+
+
+    return result
+
+# 删除翻译结果的特殊字符
+def cleartext(text):
+    return text.replace('"','').replace("'",'').replace('&#39;','').replace('&quot;',"").strip()

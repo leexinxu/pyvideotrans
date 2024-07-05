@@ -41,11 +41,9 @@ class Ui_MainWindow(object):
         self.layout_source_mp4 = QtWidgets.QFormLayout()
         self.layout_source_mp4.setObjectName("layout_source_mp4")
         self.btn_get_video = QtWidgets.QPushButton(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.btn_get_video.sizePolicy().hasHeightForWidth())
-        self.btn_get_video.setSizePolicy(sizePolicy)
+
+
+        
         self.btn_get_video.setMinimumSize(QtCore.QSize(120, 30))
         self.btn_get_video.setObjectName("btn_get_video")
         self.layout_source_mp4.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.btn_get_video)
@@ -85,11 +83,16 @@ class Ui_MainWindow(object):
         self.layout_translate_type = QtWidgets.QFormLayout()
         self.layout_translate_type.setObjectName("layoutconfig.uilanglist.get_type")
         self.label_9 = QtWidgets.QLabel(self.layoutWidget)
+       
+       
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.label_9.sizePolicy().hasHeightForWidth())
         self.label_9.setSizePolicy(sizePolicy)
+
+
+        
         self.label_9.setMinimumSize(QtCore.QSize(0, 30))
         self.label_9.setObjectName("label_9")
         self.layout_translate_type.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label_9)
@@ -103,42 +106,8 @@ class Ui_MainWindow(object):
         self.translate_type.setObjectName("translate_type")
         self.layout_translate_type.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.translate_type)
         self.horizontalLayout_5.addLayout(self.layout_translate_type)
-
-
-
-        self.horizontalLayout_5.addStretch()
-        self.layout_proxy = QtWidgets.QFormLayout()
-        self.layout_proxy.setObjectName("layout_proxy")
         
-        self.label = QtWidgets.QLabel(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
-        self.label.setSizePolicy(sizePolicy)
-        self.label.setMinimumSize(QtCore.QSize(0, 30))
-        self.label.setObjectName("label")
-        self.layout_proxy.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label)
-        self.proxy = QtWidgets.QLineEdit(self.layoutWidget)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.proxy.sizePolicy().hasHeightForWidth())
-        self.proxy.setSizePolicy(sizePolicy)
-        self.proxy.setMaximumSize(QtCore.QSize(220, 30))
-        self.proxy.setObjectName("proxy")
-        self.layout_proxy.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.proxy)
-        self.horizontalLayout_5.addLayout(self.layout_proxy)
-        
-        self.listen_btn = QtWidgets.QPushButton(self.layoutWidget)
-        self.listen_btn.setEnabled(False)
-        self.listen_btn.setFixedWidth(80)
-
-        
-        self.verticalLayout_2.addLayout(self.horizontalLayout_5)
-        self.horizontalLayout = QtWidgets.QHBoxLayout()
-        self.horizontalLayout.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
-        self.horizontalLayout.setObjectName("horizontalLayout")
+        # 原始语言 目标语言 start
         self.layout_source_language = QtWidgets.QFormLayout()
         self.layout_source_language.setFormAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.layout_source_language.setObjectName("layout_source_language")
@@ -157,10 +126,14 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.source_language.sizePolicy().hasHeightForWidth())
         self.source_language.setSizePolicy(sizePolicy)
-        self.source_language.setMinimumSize(QtCore.QSize(0, 30))
+        self.source_language.setMinimumSize(QtCore.QSize(100, 30))
         self.source_language.setObjectName("source_language")
         self.layout_source_language.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.source_language)
-        self.horizontalLayout.addLayout(self.layout_source_language)
+        
+        
+        
+        
+        
         self.layout_target_language = QtWidgets.QFormLayout()
         self.layout_target_language.setFormAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.layout_target_language.setObjectName("layout_target_language")
@@ -179,10 +152,50 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.target_language.sizePolicy().hasHeightForWidth())
         self.target_language.setSizePolicy(sizePolicy)
-        self.target_language.setMinimumSize(QtCore.QSize(0, 30))
-        self.target_language.setObjectName("target_language")
+        self.target_language.setMinimumSize(QtCore.QSize(100, 30))
+        self.target_language.setObjectName("target_language")       
+        
         self.layout_target_language.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.target_language)
-        self.horizontalLayout.addLayout(self.layout_target_language)
+        
+        
+        self.horizontalLayout_5.addLayout(self.layout_source_language)
+        self.horizontalLayout_5.addLayout(self.layout_target_language)
+        # 原始语言 目标语言 end
+
+
+
+        #self.horizontalLayout_5.addStretch()
+        self.layout_proxy = QtWidgets.QFormLayout()
+        self.layout_proxy.setObjectName("layout_proxy")
+        
+        self.label = QtWidgets.QLabel(self.layoutWidget)
+
+        
+        self.label.setMinimumSize(QtCore.QSize(0, 30))
+        self.label.setObjectName("label")
+        self.layout_proxy.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label)
+        self.proxy = QtWidgets.QLineEdit(self.layoutWidget)
+
+        
+        self.proxy.setMinimumSize(QtCore.QSize(200, 30))
+        self.proxy.setObjectName("proxy")
+        self.layout_proxy.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.proxy)
+        self.horizontalLayout_5.addLayout(self.layout_proxy)
+        
+        self.listen_btn = QtWidgets.QPushButton(self.layoutWidget)
+        self.listen_btn.setEnabled(False)
+        self.listen_btn.setFixedWidth(80)
+
+        
+        self.verticalLayout_2.addLayout(self.horizontalLayout_5)
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        
+        
+        
+        
+        
         self.layout_tts_type = QtWidgets.QFormLayout()
         self.layout_tts_type.setFormAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.layout_tts_type.setObjectName("layout_tts_type")
@@ -279,7 +292,8 @@ class Ui_MainWindow(object):
             config.uilanglist['faster model'],
             config.uilanglist['openai model'],
             "GoogleSpeech",
-            "zh_recogn中文识别" if config.defaulelang=='zh' else "zh_recogn only Chinese"
+            "zh_recogn中文识别" if config.defaulelang=='zh' else "zh_recogn only Chinese",
+            "豆包模型识别" if config.defaulelang=='zh' else "Doubao"
         ])
         self.model_type.setToolTip(config.uilanglist['model_type_tips'])
 
@@ -290,7 +304,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.whisper_model.sizePolicy().hasHeightForWidth())
         self.whisper_model.setSizePolicy(sizePolicy)
-        self.whisper_model.setMinimumSize(QtCore.QSize(0, 30))
+        self.whisper_model.setMinimumSize(QtCore.QSize(180, 30))
         self.whisper_model.setObjectName("whisper_model")
         self.layout_whisper_model.addWidget(self.whisper_model, 0, 1, 1, 1)
         self.whisper_type = QtWidgets.QComboBox(self.layoutWidget)
@@ -299,7 +313,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.whisper_type.sizePolicy().hasHeightForWidth())
         self.whisper_type.setSizePolicy(sizePolicy)
-        self.whisper_type.setMinimumSize(QtCore.QSize(0, 30))
+        self.whisper_type.setMinimumSize(QtCore.QSize(100, 30))
         self.whisper_type.setObjectName("whisper_type")
         self.layout_whisper_model.addWidget(self.whisper_type, 0, 2, 1, 1)
         self.horizontalLayout_4.addLayout(self.layout_whisper_model)
@@ -391,9 +405,9 @@ class Ui_MainWindow(object):
         self.gaoji_layout_inner.addWidget(self.video_autorate)
 
 
-        self.auto_ajust = QtWidgets.QCheckBox(self.layoutWidget)
-        self.auto_ajust.setObjectName("auto_ajust")
-        self.gaoji_layout_inner.addWidget(self.auto_ajust)
+        # self.auto_ajust = QtWidgets.QCheckBox(self.layoutWidget)
+        # self.auto_ajust.setObjectName("auto_ajust")
+        # self.gaoji_layout_inner.addWidget(self.auto_ajust)
 
         self.is_separate = QtWidgets.QCheckBox(self.layoutWidget)
         self.is_separate.setMinimumSize(QtCore.QSize(0, 30))
@@ -534,6 +548,10 @@ class Ui_MainWindow(object):
         self.actionbaidu_key.setObjectName("actionbaidu_key")
         self.actionchatgpt_key = QtGui.QAction(MainWindow)
         self.actionchatgpt_key.setObjectName("actionchatgpt_key")
+        self.actionlocalllm_key = QtGui.QAction(MainWindow)
+        self.actionlocalllm_key.setObjectName("actionlocalllm_key")
+        self.actionzijiehuoshan_key = QtGui.QAction(MainWindow)
+        self.actionzijiehuoshan_key.setObjectName("actionzijiehuoshan_key")
         self.actiondeepL_key = QtGui.QAction(MainWindow)
         self.actiondeepL_key.setObjectName("actiondeepL_key")
         self.action_tool = QtGui.QAction(MainWindow)
@@ -565,14 +583,15 @@ class Ui_MainWindow(object):
         self.actiontrans_api.setObjectName("actiontrans_api")
         self.actionzhrecogn_api = QtGui.QAction(MainWindow)
         self.actionzhrecogn_api.setObjectName("actionzhrecogn_api")
+        
+        self.actiondoubao_api = QtGui.QAction(MainWindow)
+        self.actiondoubao_api.setObjectName("actiondoubao_api")
 
         self.actiontts_gptsovits = QtGui.QAction(MainWindow)
         self.actiontts_gptsovits.setObjectName("actiontts_gptsovits")
 
         self.action_website = QtGui.QAction(MainWindow)
         self.action_website.setObjectName("action_website")
-        self.action_aihelp = QtGui.QAction(MainWindow)
-        self.action_aihelp.setObjectName("self.action_aihelp")
         self.action_blog = QtGui.QAction(MainWindow)
         self.action_blog.setObjectName("action_blog")
         self.action_discord = QtGui.QAction(MainWindow)
@@ -641,8 +660,9 @@ class Ui_MainWindow(object):
         self.action_hun.setObjectName("action_hun")
 
         self.action_fanyi = QtGui.QAction(MainWindow)
-
         self.action_fanyi.setObjectName("action_fanyi")
+        self.action_hebingsrt = QtGui.QAction(MainWindow)
+        self.action_hebingsrt.setObjectName("action_hebingsrt")
 
 
         self.action_clearcache = QtGui.QAction(MainWindow)
@@ -665,6 +685,10 @@ class Ui_MainWindow(object):
         self.menu_Key.addAction(self.actiontencent_key)
         self.menu_Key.addSeparator()
         self.menu_Key.addAction(self.actionchatgpt_key)
+        self.menu_Key.addSeparator()
+        self.menu_Key.addAction(self.actionlocalllm_key)
+        self.menu_Key.addSeparator()
+        self.menu_Key.addAction(self.actionzijiehuoshan_key)
         self.menu_Key.addSeparator()
         self.menu_Key.addAction(self.actionazure_key)
         self.menu_Key.addSeparator()
@@ -692,6 +716,8 @@ class Ui_MainWindow(object):
         self.menu_Key.addSeparator()
         self.menu_Key.addAction(self.actiontts_api)
         self.menu_Key.addSeparator()
+        self.menu_Key.addAction(self.actiondoubao_api)
+        self.menu_Key.addSeparator()
         self.menu_Key.addAction(self.actionzhrecogn_api)
 
         self.menu_Key.addSeparator()
@@ -705,8 +731,6 @@ class Ui_MainWindow(object):
         self.menu.addSeparator()
         self.menu_H.addSeparator()
         self.menu_H.addAction(self.action_website)
-        self.menu_H.addSeparator()
-        self.menu_H.addAction(self.action_aihelp)
         self.menu_H.addSeparator()
         self.menu_H.addAction(self.action_blog)
         self.menu_H.addSeparator()
@@ -747,6 +771,7 @@ class Ui_MainWindow(object):
         self.toolBar.addAction(self.action_yinshipinfenli)
         self.toolBar.addAction(self.action_yingyinhebing)
         self.toolBar.addAction(self.action_hun)
+        self.toolBar.addAction(self.action_hebingsrt)
 
         # self.retranslateUi(MainWindow)
         #200ms后渲染文字
@@ -768,7 +793,7 @@ class Ui_MainWindow(object):
         self.source_language.setToolTip(config.uilanglist.get("The language used for the original video pronunciation"))
         self.label_3.setText(config.uilanglist.get("Target lang"))
         self.target_language.setToolTip(config.uilanglist.get("What language do you want to translate into"))
-        self.tts_text.setText("TTS")
+        self.tts_text.setText("配音渠道" if config.defaulelang=='zh' else "TTS")
         self.label_4.setText(config.uilanglist.get("Dubbing role"))
         self.voice_role.setToolTip(config.uilanglist.get("No is not dubbing"))
 
@@ -785,8 +810,8 @@ class Ui_MainWindow(object):
         self.video_autorate.setText('视频自动慢速' if config.defaulelang=='zh' else 'Video Auto Slow')
         self.append_video.setToolTip('如果配音时长大于视频时，是否视频末尾延长' if config.defaulelang=='zh' else 'If the dubbing time is longer than the video time, is the end of the video extended?')
         self.append_video.setText('视频末尾延长?' if config.defaulelang=='zh' else 'Extension video?')
-        self.auto_ajust.setText(config.transobj.get("auto_ajust"))
-        self.auto_ajust.setToolTip(config.uilanglist.get("shuoming03"))
+        # self.auto_ajust.setText(config.transobj.get("auto_ajust"))
+        # self.auto_ajust.setToolTip(config.uilanglist.get("shuoming03"))
         self.enable_cuda.setText(config.uilanglist.get("Enable CUDA?"))
         self.is_separate.setText(config.uilanglist.get("Preserve background music"))
         self.is_separate.setToolTip(config.uilanglist.get("If retained, the required time may be longer, please be patient and wait"))
@@ -804,6 +829,8 @@ class Ui_MainWindow(object):
         self.toolBar.setWindowTitle("toolBar")
         self.actionbaidu_key.setText("百度翻译设置" if config.defaulelang=='zh' else "Baidu Key")
         self.actionchatgpt_key.setText("ChatGPT及兼容API" if config.defaulelang=='zh' else "ChatGPT API")
+        self.actionlocalllm_key.setText("本地兼容openAI大模型" if config.defaulelang=='zh' else "Local LLM  API")
+        self.actionzijiehuoshan_key.setText("字节火山引擎模型" if config.defaulelang=='zh' else 'ByteDance Ark')
         self.actiondeepL_key.setText("DeepL Key")
         self.action_tool.setText(config.uilanglist.get("Video Toolbox"))
         self.action_tool.setToolTip(config.uilanglist.get("Video Toolbox"))
@@ -819,9 +846,9 @@ class Ui_MainWindow(object):
         self.actiontts_api.setText("自定义TTS-API" if config.defaulelang=='zh' else "TTS-API")
         self.actiontrans_api.setText("自定义翻译API" if config.defaulelang=='zh' else "TransateAPI")
         self.actionzhrecogn_api.setText("zh_recogn中文语音识别" if config.defaulelang=='zh' else "zh_recogn only Chinese")
+        self.actiondoubao_api.setText("豆包模型音视频识别" if config.defaulelang=='zh' else "Doubao")
         self.actiontts_gptsovits.setText("GPT-SoVITS TTS")
         self.action_website.setText(config.uilanglist.get("Documents"))
-        self.action_aihelp.setText('AI文档问答助手')
         self.action_discord.setText("Discord")
         self.action_blog.setText("博客教程" if config.defaulelang=='zh' else 'My Blog')
         self.action_models.setText(config.uilanglist["Download Models"])
@@ -853,6 +880,9 @@ class Ui_MainWindow(object):
         self.action_hun.setToolTip(config.uilanglist.get("Mix two audio files into one audio file"))
         self.action_fanyi.setText(config.uilanglist.get("Text  Or Srt  Translation"))
         self.action_fanyi.setToolTip(config.uilanglist.get("Translate text or subtitles"))
+
+        self.action_hebingsrt.setText('合并两个字幕' if config.defaulelang=='zh' else 'Merge 2 subtitles')
+        self.action_hebingsrt.setToolTip('将2个字幕文件合并为一个，组成双语字幕' if config.defaulelang=='zh' else 'Combine 2 subtitle files into one to form bilingual subtitles')
 
         self.action_clearcache.setText("Clear Cache" if config.defaulelang!='zh' else '清理缓存和配置')
 

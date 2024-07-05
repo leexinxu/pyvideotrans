@@ -92,7 +92,8 @@ class Ui_MainWindow(object):
             config.uilanglist['faster model'],
             config.uilanglist['openai model'],
             "GoogleSpeech",
-            "zh_recogn中文识别" if config.defaulelang=='zh' else "zh_recogn only Chinese"
+            "zh_recogn中文识别" if config.defaulelang=='zh' else "zh_recogn only Chinese",
+            "豆包模型识别" if config.defaulelang=='zh' else "Doubao"
         ])
 
         self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.shibie_model_type)
@@ -112,7 +113,6 @@ class Ui_MainWindow(object):
         self.shibie_whisper_type = QtWidgets.QComboBox(self.tab_4)
         self.shibie_whisper_type.addItems(
             [config.transobj['whisper_type_all'],
-             config.transobj['whisper_type_split'],
              config.transobj['whisper_type_avg']]
         )
         self.shibie_whisper_type.setToolTip(config.transobj['fenge_tips'])
@@ -279,14 +279,14 @@ class Ui_MainWindow(object):
         self.voice_autorate.setEnabled(False)
         self.voice_autorate.setObjectName("voice_autorate")
 
-        self.audio_ajust = QtWidgets.QCheckBox(self.tab_2)
-        self.audio_ajust.setEnabled(False)
-        self.audio_ajust.setObjectName("audio_ajust")
+        # self.audio_ajust = QtWidgets.QCheckBox(self.tab_2)
+        # self.audio_ajust.setEnabled(False)
+        # self.audio_ajust.setObjectName("audio_ajust")
 
 
         self.horizontalLayout_10_1.addWidget(self.tts_issrt)
         self.horizontalLayout_10_1.addWidget(self.voice_autorate)
-        self.horizontalLayout_10_1.addWidget(self.audio_ajust)
+        # self.horizontalLayout_10_1.addWidget(self.audio_ajust)
 
         self.edge_volume_layout = QtWidgets.QHBoxLayout()
 
@@ -764,7 +764,7 @@ class Ui_MainWindow(object):
         self.tts_issrt.setToolTip(box_lang.get("If so, the line number and time value will skip reading aloud"))
         self.tts_issrt.setText(box_lang.get("Is srt?"))
         self.voice_autorate.setText(box_lang.get("Automatic acceleration?"))
-        self.audio_ajust.setText(config.transobj.get("auto_ajust"))
+        # self.audio_ajust.setText(config.transobj.get("auto_ajust"))
         self.hecheng_startbtn.setText(box_lang.get("Start"))
         self.label_7.setText(box_lang.get("Output audio name"))
         self.hecheng_out.setPlaceholderText(box_lang.get("Set the name of the generated audio file here. If not filled in, use the time and date command"))

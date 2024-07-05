@@ -39,7 +39,31 @@ def trans(text_list, target_language="en", *, set_p=True,inst=None,stop=0,source
     index = 0  # 当前循环需要开始的 i 数字,小于index的则跳过
     iter_num = 0  # 当前循环次数，如果 大于 config.settings.retries 出错
     err = ""
-    update_proxy(type='set')
+    proxies=None
+    pro=update_proxy(type='set')
+    if pro:
+        proxies={"https":pro,"http":pro}
+
+    headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        }
+    def get_content(data,auth):
+        url = f"https://api-edge.cognitive.microsofttranslator.com/translate?from=&to={data['target_language']}&api-version=3.0&includeSentenceLength=true"
+        headers['Authorization'] = f"Bearer {auth.text}"
+        config.logger.info(f'[Mircosoft]请求数据:{url=},{auth.text=}')
+        response = requests.post(url, json=[{"Text": data['text']}], headers=headers, timeout=300)
+        config.logger.info(f'[Mircosoft]返回:{response.text=}')
+        if response.status_code != 200:
+            raise Exception(f'{response.status_code=}')
+        try:
+            re_result = response.json()
+        except Exception:
+            raise Exception(config.transobj['notjson'] + response.text)
+
+        if len(re_result) == 0 or len(re_result[0]['translations']) == 0:
+            raise Exception(f'{re_result}')
+        return re_result[0]['translations'][0]['text']
+
     while 1:
         if config.exit_soft or (config.current_status!='ing' and config.box_trans!='ing'):
             return
@@ -58,16 +82,13 @@ def trans(text_list, target_language="en", *, set_p=True,inst=None,stop=0,source
         else:
             source_text = [f"{t['text']}" for t in text_list]
         
-        headers = {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                    
-        }
+
         
         # 切割为每次翻译多少行，值在 set.ini中设定，默认10
         split_size = int(config.settings['trans_thread'])
         split_source_text = [source_text[i:i + split_size] for i in range(0, len(source_text), split_size)]
         try:
-            auth=requests.get('https://edge.microsoft.com/translate/auth',headers=headers)
+            auth=requests.get('https://edge.microsoft.com/translate/auth',headers=headers,proxies=proxies)
         except:
             err='连接微软翻译失败，请更换其他翻译渠道' if config.defaulelang=='zh' else 'Failed to connect to Microsoft Translate, please change to another translation channel'
             continue
@@ -82,32 +103,29 @@ def trans(text_list, target_language="en", *, set_p=True,inst=None,stop=0,source
             try:
                 source_length=len(it)
                 text = "\n".join(it)
-                url = f"https://api-edge.cognitive.microsofttranslator.com/translate?from=&to={target_language}&api-version=3.0&includeSentenceLength=true"
-                headers['Authorization']=f"Bearer {auth.text}"
-                config.logger.info(f'[Mircosoft]请求数据:{url=},{auth.text=}')
-                response = requests.post(url,  json=[{"Text":text}],headers=headers, timeout=300)
-                config.logger.info(f'[Mircosoft]返回:{response.text=}')
-                if response.status_code != 200:
-                    err=f'{response.status_code=}'
-                    break
-                try:
-                    re_result=response.json()
-                except Exception:
-                    err=config.transobj['notjson']+response.text
-                    break
+                data={
+                    "text":text,
+                    "target_language":target_language
+                }
+                res_trans=get_content(data,auth)
 
-                if len(re_result)==0 or len(re_result[0]['translations'])==0:
-                    err=f'{re_result}'
-                    break
+                result=tools.cleartext(res_trans).split("\n")
+                result_length = len(result)
+                # 如果返回数量和原始语言数量不一致，则重新切割
+                if result_length < source_length:
+                    print(f'翻译前后数量不一致，需要重新切割')
+                    result=[]
+                    for line_res in it:
+                        data['text']=line_res
+                        result.append(get_content(data,auth))
 
-                result=re_result[0]['translations'][0]['text'].strip().replace('&#39;','"').replace('&quot;',"'").split("\n")
                 if inst and inst.precent < 75:
                     inst.precent += round((i + 1) * 5 / len(split_source_text), 2)
                 if set_p:
                     tools.set_process( f'{result[0]}\n\n' if split_size==1 else "\n\n".join(result), 'subtitle')
                     tools.set_process(config.transobj['starttrans']+f' {i*split_size+1} ',btnkey=inst.init['btnkey'] if inst else "")
                 else:
-                    tools.set_process("\n\n".join(result), func_name="set_fanyi")
+                    tools.set_process_box("\n".join(result), func_name="fanyi",type="set")
                 result_length=len(result)
                 config.logger.info(f'{result_length=},{source_length=}')
                 while result_length<source_length:

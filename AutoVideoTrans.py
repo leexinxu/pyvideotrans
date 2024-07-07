@@ -203,6 +203,7 @@ config.params['translate_type'] = 'LocalLLM'
 config.params['localllm_api'] = 'http://127.0.0.1:11434/v1'
 config.params['localllm_key'] = 'ollama'
 config.params['localllm_model'] = 'qwen2'
+config.params['trans_thread'] = 5
 
 # %%
 # 翻译视频

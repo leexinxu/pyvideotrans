@@ -188,7 +188,7 @@ config.params['whisper_type'] = 'all'
 config.params['voice_rate'] = '0'
 config.params['append_video'] = False
 config.params['voice_autorate'] = True
-config.params['audio_rate'] = 1.8
+config.params['audio_rate'] = 1.5
 config.params['video_autorate'] = False
 config.params['auto_ajust'] = True
 config.params['back_audio']='-'
@@ -199,11 +199,15 @@ config.params['pitch'] = '+0%'
 config.params['is_separate'] = True
 config.params['fontsize'] = 12
 config.params['whisper_threads'] = 8
+config.params['trans_thread'] = 5
+
 config.params['translate_type'] = 'LocalLLM'
 config.params['localllm_api'] = 'http://127.0.0.1:11434/v1'
 config.params['localllm_key'] = 'ollama'
 config.params['localllm_model'] = 'qwen2'
-config.params['trans_thread'] = 5
+
+# config.params['translate_type'] = 'Google'
+# set_proxy('127.0.0.1:7890')
 
 # %%
 # 翻译视频

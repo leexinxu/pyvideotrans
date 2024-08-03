@@ -51,20 +51,20 @@ def translate_to_chinese(text):
     #     print(f"Error during translation chatGPT: {e}")
 
     # 使用LocalLLM翻译
-    # try:
-    #     translated_text = run_trans(
-    #         translate_type='LocalLLM',
-    #         text_list=text,
-    #         target_language_name='zh-cn',
-    #         set_p=True,
-    #         inst=None,
-    #         source_code='en')
-    #     print(f"Translation LocalLLM: {translated_text=}")
-    # except Exception as e:
-    #     print(f"Error during translation LocalLLM: {e}")
+    try:
+        translated_text = run_trans(
+            translate_type='LocalLLM',
+            text_list=text,
+            target_language_name='zh-cn',
+            set_p=True,
+            inst=None,
+            source_code='en')
+        print(f"Translation LocalLLM: {translated_text=}")
+    except Exception as e:
+        print(f"Error during translation LocalLLM: {e}")
     
-    # if translated_text:
-    #     return translated_text
+    if translated_text:
+        return translated_text
 
     # 使用Google翻译
     try:
@@ -204,10 +204,10 @@ config.params['trans_thread'] = 15
 config.params['translate_type'] = 'LocalLLM'
 config.params['localllm_api'] = 'http://127.0.0.1:11434/v1'
 config.params['localllm_key'] = 'ollama'
-config.params['localllm_model'] = 'qwen2'
+config.params['localllm_model'] = 'llama3.1'
 
-config.params['translate_type'] = 'Google'
-set_proxy('127.0.0.1:7890')
+# config.params['translate_type'] = 'Google'
+# set_proxy('127.0.0.1:7890')
 
 # %%
 # 翻译视频
